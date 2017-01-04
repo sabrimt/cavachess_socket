@@ -68,6 +68,7 @@ io.on('connection', function (socket) {
     /* */
     socket.on('leaveRoom', function () {
     	console.log('Un utilisateur a quitté (message serv)');
+    	var room = rooms[socket.id];
         // On quitte la room
         socket.leave(room);
 
@@ -75,6 +76,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
+    	var room = rooms[socket.id];
     	console.log('Navigateur fermé ou perte de connexion (message serv)');
     	console.log(io.engine.clientsCount);
         socket.broadcast.to(room).emit('gameEnd');

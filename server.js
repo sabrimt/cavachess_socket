@@ -13,38 +13,57 @@ http.listen(3000, function(){
 });
 
 /* Initialisation */
+
 var queue = [];    // list of sockets waiting for peers
 var rooms = {};    // map socket.id => room
-var names = {};    // map socket.id => name
 var allUsers = {}; // map socket.id => socket
+var waitingUsers = {};
 
+function filtreCompet(competition) {
+	return function filtreQueue(elem) {
+		return elem.competition === competition;
+		
+	};	
+}
 
 /* Gestion de la file d'attente */
-var findPeerForLoneSocket = function(socket) {
-    // this is place for possibly some extensive logic
-    // which can involve preventing two people pairing multiple times
+var queueSocket = function(socket, name, competition) {
 
-    if (queue.length > 0) {
+	// Ajout du joueur à la file d'attente
+	// queue.push({'player': socket, 'name' : name, 'competition' : competition});
+
+	var queueCompet = queue.filter(filtreCompet(competition));
+
+    if (queueCompet.length > 0) {
         // S'il existe quelqu'un dans la file
-        var peer = queue.pop();
-        var room = socket.id + '#' + peer.id;
+        var peer = queueCompet.pop();
+        var room = socket.id + '#' + peer.player.id;
 
         // Les utilisateurs rejoignent le même salon
-        peer.join(room);
+        peer.player.join(room);
         socket.join(room);
 
         // Enregistrement du nom de la room en cours d'utilisation
-        rooms[peer.id] = room;
+        rooms[peer.player.id] = room;
         rooms[socket.id] = room;
 
         // Echange des infos entre les deux utilisteurs
-        peer.emit('gameStart', {'name': names[socket.id], 'room':room, 'color':'white'});
-        socket.emit('gameStart', {'name': names[peer.id], 'room':room, 'color':'black'});
-    } else {
-        // Personne dans la file d'attente, on ajoute l'utilisateur
-        queue.push(socket);
+        peer.player.emit('gameStart', {'name': name, 'room':room, 'color':'white'});
+        socket.emit('gameStart', {'name': peer.name, 'room':room, 'color':'black'});
+
+        var queuepop = queue.findIndex(filtreCompet(competition));
+        queue.splice(queuepop, 1);
     }
+    else
+    {
+    	queue.push({'player': socket, 'name' : name, 'competition' : competition});
+    }
+    console.log("queue : "+queue.length);
+    console.log("queueCompet "+queueCompet.length);
+    //console.log(queue);
 };
+
+
 
 /* Connexion du client au serveur */
 io.on('connection', function (socket) {
@@ -53,10 +72,7 @@ io.on('connection', function (socket) {
 
     /* Reception de l'event login. */
     socket.on('login', function (data) {
-        names[socket.id] = data.username; // On stock le username de la personne qui vient de se connecter // names{socket.id : username}
-        allUsers[socket.id] = socket; // allUsers{socket.id : username}. On stock tout l'objet socket par rapport à son id dans allUsers
-
-        findPeerForLoneSocket(socket); // On vérifie s'il y a quelqu'un dans la file d'attente
+        queueSocket(socket, data.username, data.competition); 
     });
 
     /* Réception d'un event message et renvoi aux utilisateurs de la salle excepté l'envoyeur */

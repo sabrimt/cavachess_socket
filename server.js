@@ -68,75 +68,16 @@ io.on('connection', function (socket) {
     /* */
     socket.on('leaveRoom', function () {
     	console.log('Un utilisateur a quitté (message serv)');
-        var room = rooms[socket.id];
-
         // On quitte la room
         socket.leave(room);
 
         socket.broadcast.to(room).emit('gameEnd');
-
-        var peerID = room.split('#');
-        peerID = peerID[0] === socket.id ? peerID[1] : peerID[0];
-        // On remet les deux utilisateurs dans la file d'attente
-        findPeerForLoneSocket(allUsers[peerID]);
-        findPeerForLoneSocket(socket);
     });
 
     socket.on('disconnect', function () {
     	console.log('Navigateur fermé ou perte de connexion (message serv)');
     	console.log(io.engine.clientsCount);
-
-        var room = rooms[socket.id];
         socket.broadcast.to(room).emit('gameEnd');
-        var peerID = room.split('#');
-        peerID = peerID[0] === socket.id ? peerID[1] : peerID[0];
-        // current socket left, add the other one to the queue
-        findPeerForLoneSocket(allUsers[peerID]);
+
     });
 });
-
-
-/* Ancien code de test*/
-// io.on('connection', function (socket) {
-// 	// CONNEXION
-// 	console.log('--------------- a user connected ---------------');
-
-// 	// console.log('---------------');
-// 	// 	//console.log(socket.request._query.room);
-// 	// 	//console.log(socket.nsp);
-// 	// console.log('---------------');
-// 	// 	//console.log(io.engine.clientsCount);
-// 	// console.log('---------------');
-
-// 	/* Liste des clients dans le namespace*/
-// 	io.clients(function(error, clients){
-// 		if (error) throw error;
-// 		console.log(clients); // => [PZDoMHjiu8PYfRiKAAAF, Anw2LatarvGVVXEIAAAD]
-// 	});	
-
-// 	// ROOM
-
-
-// 	// io.in(socket.request._query.room).clients(function(error, clients){
-// 	// 	if (error) throw error;
-// 	// 	console.log(clients); // => [PZDoMHjiu8PYfRiKAAAF, Anw2LatarvGVVXEIAAAD]
-// 	// 	console.log('---------------');
-// 	// });
-
-// 	// DECONNEXION
-// 	socket.on('disconnect', function () {
-// 		console.log('--------------- user disconected ---------------');
-// 	});
-
-// 	// RECEPTION
-// 	socket.on('message', function (message) {
-// 		console.log('---------------');
-// 		console.log(message.text);
-
-// 		// EMISSION D'UN NOUVEAU MESSAGE A LA RECEPTION
-// 		io.emit('message', "this is a test");	
-// 	});	
-
-// 	// sending to all clients, include sender
-
-// });

@@ -116,14 +116,11 @@ io.on('connection', function (socket) {
         socket.broadcast.to(room).emit('gameturninfo', data);
     });
 
-    /* INUTILISE */
-    socket.on('leaveRoom', function () {
-    	console.log('Un utilisateur a quitté (message serv)');
+    /* FIN DE LA PARTIE */
+    socket.on('gameOver', function () {
+    	console.log("Fin de la partie");
     	var room = rooms[socket.id];
-        // On quitte la room
-        socket.leave(room);
-
-        socket.broadcast.to(room).emit('gameEnd');
+        socket.broadcast.to(room).emit('gameLooser');
     });
 
     /* DECONNEXION*/

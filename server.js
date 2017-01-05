@@ -70,18 +70,18 @@ io.on('connection', function (socket) {
 
     console.log('User '+socket.id + ' connected');
 
-    /* Reception de l'event login. */
+    /* LOGIN */
     socket.on('login', function (data) {
         queueSocket(socket, data.username, data.competition); 
     });
 
-    /* Réception d'un event message et renvoi aux utilisateurs de la salle excepté l'envoyeur */
+    /* TOUR DE JEU */
     socket.on('gameturninfo', function (data) {
         var room = rooms[socket.id];
         socket.broadcast.to(room).emit('gameturninfo', data);
     });
 
-    /* */
+    /* INUTILISE */
     socket.on('leaveRoom', function () {
     	console.log('Un utilisateur a quitté (message serv)');
     	var room = rooms[socket.id];
@@ -91,11 +91,19 @@ io.on('connection', function (socket) {
         socket.broadcast.to(room).emit('gameEnd');
     });
 
+    /* DECONNEXION*/
     socket.on('disconnect', function () {
     	var room = rooms[socket.id];
     	console.log('Navigateur fermé ou perte de connexion (message serv)');
     	console.log(io.engine.clientsCount);
         socket.broadcast.to(room).emit('gameEnd');
+    });
 
+    /* CHAT */
+    socket.on('chatmessage', function(data){
+    	var room = rooms[socket.id];
+    	message = data.username+" : "+data.message;
+    	console.log(data);
+    	io.in(room).emit('receptionmessage', message);
     });
 });

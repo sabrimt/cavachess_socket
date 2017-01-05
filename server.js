@@ -19,29 +19,55 @@ var rooms = {};    // map socket.id => room
 var allUsers = {}; // map socket.id => socket
 var waitingUsers = {};
 
-function filtreCompet(competition) {
+/* Fonctions de filtre */
+/* Joueur voulant jouer la même compétition */
+function findCompet(competition) {
 	return function filtreQueue(elem) {
 		return elem.competition === competition;		
 	};	
 }
 
+/* Socket qui vient de se déconnecter dans la file d'attente */
 function findSocket(id) {
 	return function filtreQueue(elem) {
 		return elem.player.id === id;		
 	};	
 }
 
+/* Joueurs ayant un rang similaire */
+function findRank(rank) {
+	return function filtreQueue(elem) {
+		var diff = elem.rank - rank;
+		if(diff < 201 && diff > -201 ) {
+			return true;
+		}
+		else {
+			return false;
+		}		
+	};	
+}
+
+/* Retirer un joueur ayant trouvé un adversaire de la file d'attente */
+function removeSocket(competition, rank) {
+	return function filtreQueue(elem) {
+		if(elem.competition === competition && elem.rank === rank){
+			return true;
+		}		
+	};	
+}
+
+
 /* Gestion de la file d'attente */
-var queueSocket = function(socket, name, competition) {
+var queueSocket = function(socket, name, competition, rank) {
 
-	// Ajout du joueur à la file d'attente
-	// queue.push({'player': socket, 'name' : name, 'competition' : competition});
+	
 
-	var queueCompet = queue.filter(filtreCompet(competition));
+	var queueCompet = queue.filter(findCompet(competition));
+	var queueRank = queueCompet.filter(findRank(rank));
 
-    if (queueCompet.length > 0) {
+    if (queueRank.length > 0) {
         // S'il existe quelqu'un dans la file
-        var peer = queueCompet.pop();
+        var peer = queueRank.pop();
         var room = socket.id + '#' + peer.player.id;
 
         // Les utilisateurs rejoignent le même salon
@@ -53,18 +79,22 @@ var queueSocket = function(socket, name, competition) {
         rooms[socket.id] = room;
 
         // Echange des infos entre les deux utilisteurs
-        peer.player.emit('gameStart', {'name': name, 'room':room, 'color':'white'});
-        socket.emit('gameStart', {'name': peer.name, 'room':room, 'color':'black'});
+        peer.player.emit('gameStart', {'name': name, 'room':room, 'color':'white', 'rank': rank});
+        socket.emit('gameStart', {'name': peer.name, 'room':room, 'color':'black', 'rank' : peer.rank});
 
-        var queuepop = queue.findIndex(filtreCompet(competition));
+        var queuepop = queue.findIndex(removeSocket(competition, rank));
         queue.splice(queuepop, 1);
     }
     else
     {
-    	queue.push({'player': socket, 'name' : name, 'competition' : competition});
+    	// Ajout du joueur à la file d'attente globale
+    	queue.push({'player': socket, 'name' : name, 'competition' : competition, 'rank' : rank});
     }
     console.log("file d'attente : "+queue.length);
-    //console.log("queueCompet "+queueCompet.length);
+    console.log("queueCompet "+queueCompet.length);
+    console.log("queueRank "+queueRank.length);
+    //console.log(queueCompet);
+    //console.log(queueRank);
     //console.log(queue);
 };
 
@@ -77,7 +107,7 @@ io.on('connection', function (socket) {
 
     /* LOGIN */
     socket.on('login', function (data) {
-        queueSocket(socket, data.username, data.competition); 
+        queueSocket(socket, data.username, data.competition, data.rank); 
     });
 
     /* TOUR DE JEU */

@@ -21,8 +21,13 @@ var waitingUsers = {};
 
 function filtreCompet(competition) {
 	return function filtreQueue(elem) {
-		return elem.competition === competition;
-		
+		return elem.competition === competition;		
+	};	
+}
+
+function findSocket(id) {
+	return function filtreQueue(elem) {
+		return elem.player.id === id;		
 	};	
 }
 
@@ -58,8 +63,8 @@ var queueSocket = function(socket, name, competition) {
     {
     	queue.push({'player': socket, 'name' : name, 'competition' : competition});
     }
-    console.log("queue : "+queue.length);
-    console.log("queueCompet "+queueCompet.length);
+    console.log("file d'attente : "+queue.length);
+    //console.log("queueCompet "+queueCompet.length);
     //console.log(queue);
 };
 
@@ -94,16 +99,22 @@ io.on('connection', function (socket) {
     /* DECONNEXION*/
     socket.on('disconnect', function () {
     	var room = rooms[socket.id];
-    	console.log('Navigateur fermé ou perte de connexion (message serv)');
-    	console.log(io.engine.clientsCount);
+    	var removeSocket = queue.findIndex(findSocket(socket.id));
+    	if(removeSocket !== -1) {
+    		queue.splice(removeSocket);
+    		console.log("Index du joueur dans la file d'attente supprimé : "+removeSocket);
+    	}   	
         socket.broadcast.to(room).emit('gameEnd');
+
+    	
+    	console.log(socket.id+" s'est déconnecté");  	
+    	console.log(io.engine.clientsCount+ " utilisateurs connectés");
     });
 
     /* CHAT */
     socket.on('chatmessage', function(data){
     	var room = rooms[socket.id];
     	message = data.username+" : "+data.message;
-    	console.log(data);
     	io.in(room).emit('receptionmessage', message);
     });
 });

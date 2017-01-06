@@ -112,6 +112,7 @@ io.on('connection', function (socket) {
 
     /* TOUR DE JEU */
     socket.on('gameturninfo', function (data) {
+    	//console.log(data);
         var room = rooms[socket.id];
         socket.broadcast.to(room).emit('gameturninfo', data);
     });

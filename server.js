@@ -118,10 +118,10 @@ io.on('connection', function (socket) {
     });
 
     /* FIN DE LA PARTIE */
-    socket.on('gameOver', function () {
-    	console.log("Fin de la partie");
+    socket.on('gameOver', function (data) {
+    	//console.log("Fin de la partie : " + data);
     	var room = rooms[socket.id];
-        socket.broadcast.to(room).emit('gameLooser');
+        socket.broadcast.to(room).emit('gameOver', data);
     });
 
     /* DECONNEXION*/

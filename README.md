@@ -9,14 +9,14 @@ Cavachess is a community website around Chess.
 * Launch your websocket server => node server.js 
   
 ## Get Cavachess   
-See : https://github.com/tgachet/cavachess  
+* See : https://github.com/tgachet/cavachess  
 
 ## Features
-* 1 vs 1 Chess games
-* Ingame chat
-* Matchmaking :
-    ** Players must choose the same game mode   
-    ** Players must have a close rank (+/- 200 pts)  
+1 vs 1 Chess games
+Ingame chat
+Matchmaking :  
+* Players must choose the same game mode   
+* Players must have a close rank (+/- 200 pts)  
 
 ### Known issues
 * Leaving or reloading the page close your websocket connection (instant loss)  

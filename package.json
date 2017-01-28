@@ -1,6 +1,6 @@
 {
   "name": "cavachess-websocket",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "online chess gaming",
   "dependencies": {
     "express": "^4.14.0",
